@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
+import Layout from "../components/Layout";
 
 const CommitHistory = () => {
   const location = useLocation();
@@ -51,8 +52,7 @@ const CommitHistory = () => {
   }, [localPath]);
 
   return (
-    <>
-      <Sidebar branches={branches} onSelectBranch={handleSelectBranch} />
+    <Layout branches={branches} onSelectBranch={handleSelectBranch}>
       <div className="flex flex-col items-center justify-center min-h-screen bg-background">
         <h1 className="text-4xl mb-6">Commit History</h1>
         {error && <p className="text-red-500">{error}</p>}
@@ -65,7 +65,7 @@ const CommitHistory = () => {
           ))}
         </ul>
       </div>
-    </>
+    </Layout>
   );
 };
 

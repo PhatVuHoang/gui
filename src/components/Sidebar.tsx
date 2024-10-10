@@ -9,6 +9,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ branches, onSelectBranch }) => {
   const [sidebarWidth, setSidebarWidth] = useState(256); // Default sidebar width
+  const [selectedBranch, setSelectedBranch] = useState<string>(""); // Selected branch state
   const isResizing = useRef(false); // Reference to track resizing state
   const startX = useRef(0); // Reference to store the starting X position
 
@@ -43,7 +44,7 @@ const Sidebar: React.FC<SidebarProps> = ({ branches, onSelectBranch }) => {
   return (
     <>
       <div
-        className="fixed left-0 top-0 h-full bg-gray-900 text-white py-4 pl-4 pr-1 shadow-md"
+        className="relative h-full bg-gray-900 text-white py-4 pl-4 pr-1 shadow-md"
         style={{ width: `${sidebarWidth}px` }} // Set dynamic width
       >
         <div className="overflow-y-auto overflow-x-hidden h-full scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
@@ -52,8 +53,11 @@ const Sidebar: React.FC<SidebarProps> = ({ branches, onSelectBranch }) => {
             {branches.map((branch, index) => (
               <li
                 key={index}
-                className="p-2 rounded hover:bg-gray-700 cursor-pointer"
-                onClick={() => onSelectBranch(branch)}
+                className={`p-2 rounded hover:bg-gray-700 cursor-pointer ${selectedBranch === branch ? "bg-gray-700" : ""}`}
+                onClick={() => {
+                  onSelectBranch(branch)
+                  setSelectedBranch(branch)
+                }}
               >
                 {branch}
               </li>
@@ -61,7 +65,7 @@ const Sidebar: React.FC<SidebarProps> = ({ branches, onSelectBranch }) => {
           </ul>
         </div>
         <div
-          className="absolute right-0 top-0 h-full w-1 cursor-col-resize bg-gray-600 hover:bg-gray-500" // Resizable area
+          className="absolute right-0 top-0 h-full w-2 cursor-col-resize bg-gray-600" // Resizable area
           onMouseDown={handleMouseDown} // Start resizing on mouse down
         />
       </div>
