@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { Line } from "react-chartjs-2";
-import { Chart, registerables } from "chart.js";
 
-Chart.register(...registerables); // Register necessary components
 
 const CommitHistory = () => {
   const location = useLocation();
