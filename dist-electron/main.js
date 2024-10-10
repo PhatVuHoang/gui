@@ -5261,29 +5261,23 @@ function gitInstanceFactory(baseDir, options) {
 init_git_response_error();
 var esm_default = gitInstanceFactory;
 class GitService {
-  static async cloneRepository(event, repoUrl, localPath) {
-    const git = esm_default();
+  static async cloneRepository(_event, repoUrl, localPath) {
+    const git = esm_default({
+      progress({ method, stage, progress }) {
+        _event.sender.send("git:clone-progress", { method, stage, progress });
+        console.log(`git.${method} ${stage} stage ${progress}% complete`);
+      }
+    });
     if (!fs.existsSync(localPath)) {
       fs.mkdirSync(localPath, { recursive: true });
     }
-    const cloneProgressCallback = (progress) => {
-      const percent = Math.round(progress.received / progress.total * 100);
-      event.sender.send("cloneProgress", { progress: percent });
-    };
     try {
-      await git.clone(
-        repoUrl,
-        localPath,
-        ["--progress"],
-        cloneProgressCallback
-      );
+      await git.clone(repoUrl, localPath);
       console.log(`Successfully cloned ${repoUrl} into ${localPath}`);
+      return { success: true };
     } catch (error) {
       console.error("Error cloning repository:", error);
-      event.sender.send("cloneRepoResponse", {
-        success: false,
-        error: error.message
-      });
+      return { success: false, error: error.message };
     }
   }
   static async openDirectory() {
@@ -5309,9 +5303,7 @@ function createWindow() {
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
     webPreferences: {
-      preload: path.join(__dirname, "preload.mjs"),
-      contextIsolation: true,
-      nodeIntegration: false
+      preload: path.join(__dirname, "preload.mjs")
     }
   });
   win.webContents.on("did-finish-load", () => {
@@ -5322,6 +5314,7 @@ function createWindow() {
   } else {
     win.loadFile(path.join(RENDERER_DIST, "index.html"));
   }
+  win.webContents.openDevTools();
 }
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
@@ -5335,8 +5328,8 @@ app.on("activate", () => {
   }
 });
 app.whenReady().then(createWindow);
-ipcMain.on("git:clone", async (event, repoUrl, localPath) => {
-  await GitService.cloneRepository(event, repoUrl, localPath);
+ipcMain.handle("git:clone", async (event, repoUrl, localPath) => {
+  return await GitService.cloneRepository(event, repoUrl, localPath);
 });
 ipcMain.handle("dialog:openDirectory", async () => {
   return await GitService.openDirectory();

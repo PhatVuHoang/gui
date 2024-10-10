@@ -1,39 +1,32 @@
-import simpleGit from "simple-git";
-import fs from "fs";
 import { dialog } from "electron";
+import fs from "fs";
+import simpleGit from "simple-git";
 
 export class GitService {
   static async cloneRepository(
-    event: Electron.IpcMainEvent,
+    _event: Electron.IpcMainInvokeEvent,
     repoUrl: string,
     localPath: string
   ) {
-    const git = simpleGit();
+    
+    const git = simpleGit({
+      progress({ method, stage, progress }) {
+        _event.sender.send('git:clone-progress', { method, stage, progress });
+        console.log(`git.${method} ${stage} stage ${progress}% complete`);
+      },
+    });
 
     if (!fs.existsSync(localPath)) {
       fs.mkdirSync(localPath, { recursive: true });
     }
 
-    const cloneProgressCallback = (progress: any) => {
-      const percent = Math.round((progress.received / progress.total) * 100);
-      event.sender.send("cloneProgress", { progress: percent });
-    };
-
     try {
-      await git.clone(
-        repoUrl,
-        localPath,
-        ["--progress"],
-        cloneProgressCallback
-      );
+      await git.clone(repoUrl, localPath);
       console.log(`Successfully cloned ${repoUrl} into ${localPath}`);
-      // event.sender.send('cloneRepoResponse', { success: true });
+      return { success: true };
     } catch (error: any) {
       console.error("Error cloning repository:", error);
-      event.sender.send("cloneRepoResponse", {
-        success: false,
-        error: error.message,
-      });
+      return { success: false, error: error.message };
     }
   }
 

@@ -4,8 +4,8 @@ function App() {
   const [repoUrl, setRepoUrl] = useState("");
   const [localPath, setLocalPath] = useState("");
   const [cloneStatus, setCloneStatus] = useState("");
-  const [progress, setProgress] = useState(0); // To hold clone progress percentage
   const [isCloning, setIsCloning] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const getRepoName = (url: string) => {
     const match = url.match(/\/([^/]+)\.git$/);
@@ -15,15 +15,13 @@ function App() {
   const handleCloneRepo = async () => {
     setIsCloning(true); // Start cloning
     const response = await window.electronAPI.cloneRepo(repoUrl, localPath);
-
     if (response.success) {
-      setCloneStatus('Repository cloned successfully.');
+      setCloneStatus("Repository cloned successfully.");
     } else {
       setCloneStatus(`Error: ${response.error}`);
     }
-    
+
     setIsCloning(false); // End cloning process
-    setProgress(0); // Reset progress bar
   };
 
   const handleOpenDirectory = async () => {
@@ -41,20 +39,20 @@ function App() {
     }
   };
 
-    // Listen to clone progress event from preload script
-    useEffect(() => {
-      const onProgress = (_event: any, progressData: any) => {
-        const percent = progressData.progress;
-        setProgress(percent); // Update progress percentage
-      };
-    
-      window.electronAPI.onCloneProgress(onProgress);
-    
-      return () => {
-        // Cleanup event listener when component unmounts
-        window.electronAPI.removeCloneProgress(onProgress);
-      };
-    }, []);
+  useEffect(() => {
+    // Listen for clone progress updates from Electron main process
+    const onProgress = (_event: any, { progress }: any) => {
+      setProgress(progress);
+    };
+
+    // Register the progress listener
+    window.electronAPI.onCloneProgress(onProgress);
+
+    return () => {
+      // Clean up listener when the component unmounts
+      window.electronAPI.removeCloneProgress(onProgress);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
@@ -83,33 +81,41 @@ function App() {
             placeholder="Local Path"
             value={localPath}
             onChange={(e) => setLocalPath(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-16"
+            className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-16 ${
+              !repoUrl ? "cursor-not-allowed" : ""
+            }`}
             disabled={!repoUrl}
           />
           <button
             disabled={!repoUrl}
             onClick={handleOpenDirectory}
-            className="absolute right-1 top-1 bottom-1 bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition-colors text-sm"
+            className={`absolute right-1 top-1 bottom-1 bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition-colors text-sm ${
+              !repoUrl ? "cursor-not-allowed" : ""
+            }`}
           >
             Browse
           </button>
         </div>
 
-        <button
-          onClick={handleCloneRepo}
-          className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors"
-          disabled={isCloning}
-        >
-          {isCloning ? 'Cloning...' : 'Clone Repo'}
-        </button>
-
-        {isCloning && (
-          <div className="w-full bg-gray-200 rounded-full h-4 mt-4">
+        {isCloning ? (
+          <div className="w-full max-w-lg bg-gray-300 rounded-lg overflow-hidden relative">
             <div
-              className="bg-blue-500 h-4 rounded-full transition-width"
+              className="bg-gradient-to-r from-blue-500 to-purple-600 h-6 flex items-center justify-center text-white text-sm font-bold rounded-lg transition-all duration-300 ease-in-out"
               style={{ width: `${progress}%` }}
-            ></div>
+            >
+              {progress}%
+            </div>
           </div>
+        ) : (
+          <button
+            onClick={handleCloneRepo}
+            className={`w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors ${
+              isCloning || !repoUrl || !localPath ? "cursor-not-allowed" : ""
+            }`}
+            disabled={isCloning || !repoUrl || !localPath}
+          >
+            Clone Repo
+          </button>
         )}
 
         <p className="mt-4 text-center text-sm text-gray-500">{cloneStatus}</p>
