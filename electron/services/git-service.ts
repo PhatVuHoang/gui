@@ -46,4 +46,16 @@ export class GitService {
 
     return { selectedPath, isEmpty };
   }
+
+  static async getCommits(localPath: string) {
+    const git = simpleGit(localPath);
+
+    try {
+      const log = await git.log();
+      return { success: true, data: log.all };
+    } catch (error: any) {
+      console.log("Error fetching commits:", error);
+      return { success: false, error: error.message };
+    }
+  }
 }

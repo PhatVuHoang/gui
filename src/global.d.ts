@@ -10,6 +10,7 @@ declare global {
       openDirectory: () => Promise<{ selectedPath: string; isEmpty: boolean }>;
       onCloneProgress: (callback: (event: any, progress: { progress: number }) => void) => void;
       removeCloneProgress: (callback: (event: any, progress: { progress: number }) => void) => void;
+      getCommitHistory: (localPath: string) => Promise<{ success: boolean; data?: Commit[]; error?: string }>;
     };
   }
 }

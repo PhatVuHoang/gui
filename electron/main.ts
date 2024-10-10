@@ -77,3 +77,7 @@ ipcMain.handle("git:clone", async (event, repoUrl: string, localPath: string) =>
 ipcMain.handle("dialog:openDirectory", async () => {
   return await GitService.openDirectory();
 });
+
+ipcMain.handle("git:getCommits", async (_event, localPath: string) => {
+  return await GitService.getCommits(localPath);
+});

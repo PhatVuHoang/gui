@@ -5291,6 +5291,16 @@ class GitService {
     const isEmpty = fs.readdirSync(selectedPath).length === 0;
     return { selectedPath, isEmpty };
   }
+  static async getCommits(localPath) {
+    const git = esm_default(localPath);
+    try {
+      const log = await git.log();
+      return { success: true, data: log.all };
+    } catch (error) {
+      console.log("Error fetching commits:", error);
+      return { success: false, error: error.message };
+    }
+  }
 }
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname, "..");
@@ -5333,6 +5343,9 @@ ipcMain.handle("git:clone", async (event, repoUrl, localPath) => {
 });
 ipcMain.handle("dialog:openDirectory", async () => {
   return await GitService.openDirectory();
+});
+ipcMain.handle("git:getCommits", async (_event, localPath) => {
+  return await GitService.getCommits(localPath);
 });
 export {
   MAIN_DIST,

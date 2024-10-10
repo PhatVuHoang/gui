@@ -5,5 +5,6 @@ electron.contextBridge.exposeInMainWorld("electronAPI", {
   // Ensure the event name matches
   openDirectory: () => electron.ipcRenderer.invoke("dialog:openDirectory"),
   onCloneProgress: (callback) => electron.ipcRenderer.on("git:clone-progress", callback),
-  removeCloneProgress: (callback) => electron.ipcRenderer.removeListener("git:clone-progress", callback)
+  removeCloneProgress: (callback) => electron.ipcRenderer.removeListener("git:clone-progress", callback),
+  getCommitHistory: (localPath) => electron.ipcRenderer.invoke("git:getCommits", localPath)
 });

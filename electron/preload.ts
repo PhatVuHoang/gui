@@ -6,4 +6,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openDirectory: () => ipcRenderer.invoke('dialog:openDirectory'),
   onCloneProgress: (callback: any) => ipcRenderer.on('git:clone-progress', callback),
   removeCloneProgress: (callback: any) => ipcRenderer.removeListener('git:clone-progress', callback),
+  getCommitHistory: (localPath: string) => ipcRenderer.invoke('git:getCommits', localPath),
 })
