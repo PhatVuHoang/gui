@@ -5291,13 +5291,24 @@ class GitService {
     const isEmpty = fs.readdirSync(selectedPath).length === 0;
     return { selectedPath, isEmpty };
   }
-  static async getCommits(localPath) {
+  static async getCommits(localPath, branch) {
     const git = esm_default(localPath);
+    await git.checkout(branch);
     try {
       const log = await git.log();
       return { success: true, data: log.all };
     } catch (error) {
       console.log("Error fetching commits:", error);
+      return { success: false, error: error.message };
+    }
+  }
+  static async getBranches(localPath) {
+    const git = esm_default(localPath);
+    try {
+      const branchSummary = await git.branch();
+      return { success: true, data: branchSummary.all };
+    } catch (error) {
+      console.error("Error fetching branches:", error);
       return { success: false, error: error.message };
     }
   }
@@ -5344,8 +5355,11 @@ ipcMain.handle("git:clone", async (event, repoUrl, localPath) => {
 ipcMain.handle("dialog:openDirectory", async () => {
   return await GitService.openDirectory();
 });
-ipcMain.handle("git:getCommits", async (_event, localPath) => {
-  return await GitService.getCommits(localPath);
+ipcMain.handle("git:getCommits", async (_event, localPath, branch) => {
+  return await GitService.getCommits(localPath, branch);
+});
+ipcMain.handle("git:getBranches", async (_event, localPath) => {
+  return await GitService.getBranches(localPath);
 });
 export {
   MAIN_DIST,

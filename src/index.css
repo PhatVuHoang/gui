@@ -1,6 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@tailwind-scrollbar; 
 
 body {
   @apply bg-background text-accent font-sans;

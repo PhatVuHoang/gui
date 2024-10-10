@@ -78,6 +78,10 @@ ipcMain.handle("dialog:openDirectory", async () => {
   return await GitService.openDirectory();
 });
 
-ipcMain.handle("git:getCommits", async (_event, localPath: string) => {
-  return await GitService.getCommits(localPath);
+ipcMain.handle("git:getCommits", async (_event, localPath: string, branch: string) => {
+  return await GitService.getCommits(localPath, branch);
+});
+
+ipcMain.handle("git:getBranches", async (_event, localPath: string) => {
+  return await GitService.getBranches(localPath);
 });

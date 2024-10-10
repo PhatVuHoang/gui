@@ -8,10 +8,9 @@ export class GitService {
     repoUrl: string,
     localPath: string
   ) {
-    
     const git = simpleGit({
       progress({ method, stage, progress }) {
-        _event.sender.send('git:clone-progress', { method, stage, progress });
+        _event.sender.send("git:clone-progress", { method, stage, progress });
         console.log(`git.${method} ${stage} stage ${progress}% complete`);
       },
     });
@@ -47,14 +46,25 @@ export class GitService {
     return { selectedPath, isEmpty };
   }
 
-  static async getCommits(localPath: string) {
+  static async getCommits(localPath: string, branch: string) {
     const git = simpleGit(localPath);
-
+    await git.checkout(branch);
     try {
       const log = await git.log();
       return { success: true, data: log.all };
     } catch (error: any) {
       console.log("Error fetching commits:", error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  static async getBranches(localPath: string) {
+    const git = simpleGit(localPath);
+    try {
+      const branchSummary = await git.branch();
+      return { success: true, data: branchSummary.all }; // Return all branch names
+    } catch (error: any) {
+      console.error("Error fetching branches:", error);
       return { success: false, error: error.message };
     }
   }
