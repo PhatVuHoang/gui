@@ -1,15 +1,14 @@
 // src/Sidebar.tsx
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 interface SidebarProps {
-  branches: string[]; // Array of branch names
+  branches: { local: string[]; remote: string[]; current: string }; // Array of branch names
   onSelectBranch: (branch: string) => void; // Function to call when a branch is selected
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ branches, onSelectBranch }) => {
+const Sidebar = ({ branches, onSelectBranch }: SidebarProps) => {
   const [sidebarWidth, setSidebarWidth] = useState(256); // Default sidebar width
-  const [selectedBranch, setSelectedBranch] = useState<string>(""); // Selected branch state
   const isResizing = useRef(false); // Reference to track resizing state
   const startX = useRef(0); // Reference to store the starting X position
 
@@ -31,7 +30,7 @@ const Sidebar: React.FC<SidebarProps> = ({ branches, onSelectBranch }) => {
   };
 
   // Attach mouse move and mouse up events to the window
-  React.useEffect(() => {
+  useEffect(() => {
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
 
@@ -50,18 +49,48 @@ const Sidebar: React.FC<SidebarProps> = ({ branches, onSelectBranch }) => {
         <div className="overflow-y-auto overflow-x-hidden h-full scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
           <h2 className="text-lg font-semibold mb-4">Branches</h2>
           <ul className="space-y-2">
-            {branches.map((branch, index) => (
-              <li
-                key={index}
-                className={`p-2 rounded hover:bg-gray-700 cursor-pointer ${selectedBranch === branch ? "bg-gray-700" : ""}`}
-                onClick={() => {
-                  onSelectBranch(branch)
-                  setSelectedBranch(branch)
-                }}
-              >
-                {branch}
-              </li>
-            ))}
+            <details
+              open={branches.local.some(
+                (branch) => branch === branches.current
+              )}
+            >
+              <summary className="cursor-pointer">Local Branches</summary>
+              {branches.local.map((branch, index) => (
+                <li
+                  key={index}
+                  className={`p-2 rounded hover:bg-gray-700 cursor-pointer ${
+                    branches.current === branch
+                      ? "bg-gray-700 font-bold text-green-500"
+                      : ""
+                  }`}
+                  onClick={() => {
+                    onSelectBranch(branch);
+                  }}
+                >
+                  {branches.current === branch ? `*${branch}` : branch}
+                </li>
+              ))}
+            </details>
+            <details
+              open={branches.remote.some(
+                (branch) => branch === branches.current
+              )}
+            >
+              <summary className="cursor-pointer">Remote Branches</summary>
+              {branches.remote.map((branch, index) => (
+                <li
+                  key={index}
+                  className={`p-2 rounded hover:bg-gray-700 cursor-pointer ${
+                    branches.current === branch ? "bg-gray-700" : ""
+                  }`}
+                  onClick={() => {
+                    onSelectBranch(branch);
+                  }}
+                >
+                  {branches.current === branch ? `*${branch}` : branch}
+                </li>
+              ))}
+            </details>
           </ul>
         </div>
         <div

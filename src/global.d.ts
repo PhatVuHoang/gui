@@ -8,10 +8,20 @@ declare global {
         localPath: string
       ) => Promise<{ success: boolean; error?: string }>;
       openDirectory: () => Promise<{ selectedPath: string; isEmpty: boolean }>;
-      onCloneProgress: (callback: (event: any, progress: { progress: number }) => void) => void;
-      removeCloneProgress: (callback: (event: any, progress: { progress: number }) => void) => void;
-      getCommitHistory: (localPath: string, branch: string) => Promise<{ success: boolean; data?: Commit[]; error?: string }>;
-      getBranches: (localPath: string) => Promise<{ success: boolean; data?: string[]; error?: string }>;
+      onCloneProgress: (
+        callback: (event: any, progress: { progress: number }) => void
+      ) => void;
+      removeCloneProgress: (
+        callback: (event: any, progress: { progress: number }) => void
+      ) => void;
+      getCommitHistory: (
+        localPath: string,
+        branch: string
+      ) => Promise<{ success: boolean; data?: Commit[]; error?: string }>;
+      getBranches: (localPath: string) => Promise<{
+        success: boolean;
+        data?: { current: string; local: string[]; remote: string[] };
+      }>;
     };
   }
 }

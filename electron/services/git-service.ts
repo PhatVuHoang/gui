@@ -62,10 +62,37 @@ export class GitService {
     const git = simpleGit(localPath);
     try {
       const branchSummary = await git.branch();
-      return { success: true, data: branchSummary.all }; // Return all branch names
+      const remoteBranches = await git.branch(["-r"]);
+      // Local branches
+      const localBranches = branchSummary.all.filter(
+        (branch) => !branch.includes("remotes/")
+      );
+
+      // Remote branches
+      const remoteBranchList = remoteBranches.all.map((branch) =>
+        branch.replace("remotes/", "")
+      );
+
+      // Current branch
+      const currentBranch = branchSummary.current;
+      return {
+        success: true,
+        data: {
+          current: currentBranch,
+          local: localBranches,
+          remote: remoteBranchList,
+        },
+      };
     } catch (error: any) {
       console.error("Error fetching branches:", error);
-      return { success: false, error: error.message };
+      return {
+        success: false,
+        data: {
+          current: "",
+          local: [],
+          remote: [],
+        },
+      };
     }
   }
 }
