@@ -1,14 +1,15 @@
 // src/Sidebar.tsx
 
 import React, { useEffect, useRef, useState } from "react";
+import { useGlobalContext } from "../context/GlobalContext";
 
-interface SidebarProps {
-  branches: { local: string[]; remote: string[]; current: string }; // Array of branch names
-  onSelectBranch: (branch: string) => void; // Function to call when a branch is selected
-}
-
-const Sidebar = ({ branches, onSelectBranch }: SidebarProps) => {
+const Sidebar = () => {
+  const { localPath, setCurrentBranch } = useGlobalContext();
   const [sidebarWidth, setSidebarWidth] = useState(256); // Default sidebar width
+  const [localBranches, setLocalBranches] = useState<string[]>([]);
+  const [remoteBranches, setRemoteBranches] = useState<string[]>([]);
+  const [checkedOutBranch, setCheckedOutBranch] = useState<string>("");
+
   const isResizing = useRef(false); // Reference to track resizing state
   const startX = useRef(0); // Reference to store the starting X position
 
@@ -40,6 +41,35 @@ const Sidebar = ({ branches, onSelectBranch }: SidebarProps) => {
     };
   }, [sidebarWidth]);
 
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const response = await window.electronAPI.getBranches(localPath);
+        if (response.success) {
+          setLocalBranches(response.data?.local ?? []);
+          setRemoteBranches(response.data?.remote ?? []);
+          setCurrentBranch(response.data?.current ?? "");
+          setCheckedOutBranch(response.data?.current ?? "");
+        } else {
+          console.error("Failed to fetch branches.");
+        }
+      } catch (err) {
+        console.error("Failed to fetch branches.");
+      }
+    };
+
+    fetchBranches();
+  }, []);
+
+  const onCheckoutBranch = async (branch: string) => {
+    try {
+      await window.electronAPI.checkoutBranch(localPath, branch);
+      setCheckedOutBranch(branch);
+    } catch (error) {
+      console.error("Failed to checkout branch:", error);
+    }
+  };
+
   return (
     <>
       <div
@@ -50,44 +80,46 @@ const Sidebar = ({ branches, onSelectBranch }: SidebarProps) => {
           <h2 className="text-lg font-semibold mb-4">Branches</h2>
           <ul className="space-y-2">
             <details
-              open={branches.local.some(
-                (branch) => branch === branches.current
-              )}
+              open={localBranches.some((branch) => branch === checkedOutBranch)}
             >
               <summary className="cursor-pointer">Local Branches</summary>
-              {branches.local.map((branch, index) => (
+              {localBranches.map((branch, index) => (
                 <li
                   key={index}
                   className={`p-2 rounded hover:bg-gray-700 cursor-pointer ${
-                    branches.current === branch
+                    checkedOutBranch === branch
                       ? "bg-gray-700 font-bold text-green-500"
                       : ""
                   }`}
                   onClick={() => {
-                    onSelectBranch(branch);
+                    setCurrentBranch(branch);
+                  }}
+                  onDoubleClick={() => {
+                    onCheckoutBranch(branch);
                   }}
                 >
-                  {branches.current === branch ? `*${branch}` : branch}
+                  {checkedOutBranch === branch ? `*${branch}` : branch}
                 </li>
               ))}
             </details>
             <details
-              open={branches.remote.some(
-                (branch) => branch === branches.current
-              )}
+              open={remoteBranches.some((branch) => branch === checkedOutBranch)}
             >
               <summary className="cursor-pointer">Remote Branches</summary>
-              {branches.remote.map((branch, index) => (
+              {remoteBranches.map((branch, index) => (
                 <li
                   key={index}
                   className={`p-2 rounded hover:bg-gray-700 cursor-pointer ${
-                    branches.current === branch ? "bg-gray-700" : ""
+                    checkedOutBranch === branch ? "bg-gray-700" : ""
                   }`}
                   onClick={() => {
-                    onSelectBranch(branch);
+                    setCurrentBranch(branch);
+                  }}
+                  onDoubleClick={() => {
+                    onCheckoutBranch(branch);
                   }}
                 >
-                  {branches.current === branch ? `*${branch}` : branch}
+                  {checkedOutBranch === branch ? `*${branch}` : branch}
                 </li>
               ))}
             </details>

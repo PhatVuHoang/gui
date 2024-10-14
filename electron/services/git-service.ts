@@ -47,13 +47,27 @@ export class GitService {
   }
 
   static async getCommits(localPath: string, branch: string) {
+    if (!branch) {
+      console.log('Branch name is required');
+      return { success: true, data: [] };
+    }
     const git = simpleGit(localPath);
-    await git.checkout(branch);
     try {
-      const log = await git.log();
+      const log = await git.log([branch]);
       return { success: true, data: log.all };
     } catch (error: any) {
       console.log("Error fetching commits:", error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  static async checkoutBranch(localPath: string, branch: string) {
+    const git = simpleGit(localPath);
+    try {
+      await git.checkout(branch);
+      return { success: true };
+    } catch (error: any) {
+      console.error("Error checking out branch:", error);
       return { success: false, error: error.message };
     }
   }

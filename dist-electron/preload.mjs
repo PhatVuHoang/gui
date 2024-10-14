@@ -7,5 +7,6 @@ electron.contextBridge.exposeInMainWorld("electronAPI", {
   onCloneProgress: (callback) => electron.ipcRenderer.on("git:clone-progress", callback),
   removeCloneProgress: (callback) => electron.ipcRenderer.removeListener("git:clone-progress", callback),
   getCommitHistory: (localPath, branch) => electron.ipcRenderer.invoke("git:getCommits", localPath, branch),
-  getBranches: (localPath) => electron.ipcRenderer.invoke("git:getBranches", localPath)
+  getBranches: (localPath) => electron.ipcRenderer.invoke("git:getBranches", localPath),
+  checkoutBranch: (localPath, branch) => electron.ipcRenderer.send("git:checkout", localPath, branch)
 });

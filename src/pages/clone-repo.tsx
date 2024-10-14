@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useGlobalContext } from "../context/GlobalContext";
 
 const CloneRepo = () => {
+  const { setLocalPath } = useGlobalContext();
+
   const [repoUrl, setRepoUrl] = useState("");
-  const [localPath, setLocalPath] = useState("");
+  const [_localPath, _setLocalPath] = useState("");
   const [cloneStatus, setCloneStatus] = useState("");
   const [isCloning, setIsCloning] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -17,10 +20,11 @@ const CloneRepo = () => {
 
   const handleCloneRepo = async () => {
     setIsCloning(true); // Start cloning
-    const response = await window.electronAPI.cloneRepo(repoUrl, localPath);
+    const response = await window.electronAPI.cloneRepo(repoUrl, _localPath);
     if (response.success) {
       setCloneStatus("Repository cloned successfully.");
-      navigate("/commit-history", { state: { localPath } });
+      navigate("/commit-history", { state: { localPath: _localPath } });
+      setLocalPath(_localPath);
     } else {
       setCloneStatus(`Error: ${response.error}`);
     }
@@ -36,9 +40,9 @@ const CloneRepo = () => {
       if (!isEmpty) {
         const repoName = getRepoName(repoUrl);
         const newPath = `${selectedPath}/${repoName}`;
-        setLocalPath(newPath); // Set the new path with the repository name
+        _setLocalPath(newPath); // Set the new path with the repository name
       } else {
-        setLocalPath(selectedPath); // Use the selected path if the folder is empty
+        _setLocalPath(selectedPath); // Use the selected path if the folder is empty
       }
     }
   };
@@ -47,6 +51,7 @@ const CloneRepo = () => {
     const { selectedPath } = await window.electronAPI.openDirectory();
     if (selectedPath) {
       navigate("/commit-history", { state: { localPath: selectedPath } });
+      setLocalPath(selectedPath);
     }
   };
 
@@ -81,7 +86,7 @@ const CloneRepo = () => {
             type="text"
             className="w-full bg-surface border border-gray-600 rounded-md p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
             placeholder="Local Path"
-            value={localPath}
+            value={_localPath}
             onChange={(e) => setLocalPath(e.target.value)}
           />
           <button

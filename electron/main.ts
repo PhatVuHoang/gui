@@ -70,17 +70,30 @@ app.on("activate", () => {
 
 app.whenReady().then(createWindow);
 
-ipcMain.handle("git:clone", async (event, repoUrl: string, localPath: string) => {
-  return await GitService.cloneRepository(event, repoUrl, localPath);
-});
+ipcMain.on(
+  "git:checkout",
+  async (_event, localPath: string, branch: string) => {
+    await GitService.checkoutBranch(localPath, branch);
+  }
+);
+
+ipcMain.handle(
+  "git:clone",
+  async (event, repoUrl: string, localPath: string) => {
+    return await GitService.cloneRepository(event, repoUrl, localPath);
+  }
+);
 
 ipcMain.handle("dialog:openDirectory", async () => {
   return await GitService.openDirectory();
 });
 
-ipcMain.handle("git:getCommits", async (_event, localPath: string, branch: string) => {
-  return await GitService.getCommits(localPath, branch);
-});
+ipcMain.handle(
+  "git:getCommits",
+  async (_event, localPath: string, branch: string) => {
+    return await GitService.getCommits(localPath, branch);
+  }
+);
 
 ipcMain.handle("git:getBranches", async (_event, localPath: string) => {
   return await GitService.getBranches(localPath);

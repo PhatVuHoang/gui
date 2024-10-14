@@ -5292,13 +5292,26 @@ class GitService {
     return { selectedPath, isEmpty };
   }
   static async getCommits(localPath, branch) {
+    if (!branch) {
+      console.log("Branch name is required");
+      return { success: true, data: [] };
+    }
     const git = esm_default(localPath);
-    await git.checkout(branch);
     try {
-      const log = await git.log();
+      const log = await git.log([branch]);
       return { success: true, data: log.all };
     } catch (error) {
       console.log("Error fetching commits:", error);
+      return { success: false, error: error.message };
+    }
+  }
+  static async checkoutBranch(localPath, branch) {
+    const git = esm_default(localPath);
+    try {
+      await git.checkout(branch);
+      return { success: true };
+    } catch (error) {
+      console.error("Error checking out branch:", error);
       return { success: false, error: error.message };
     }
   }
@@ -5371,15 +5384,27 @@ app.on("activate", () => {
   }
 });
 app.whenReady().then(createWindow);
-ipcMain.handle("git:clone", async (event, repoUrl, localPath) => {
-  return await GitService.cloneRepository(event, repoUrl, localPath);
-});
+ipcMain.on(
+  "git:checkout",
+  async (_event, localPath, branch) => {
+    await GitService.checkoutBranch(localPath, branch);
+  }
+);
+ipcMain.handle(
+  "git:clone",
+  async (event, repoUrl, localPath) => {
+    return await GitService.cloneRepository(event, repoUrl, localPath);
+  }
+);
 ipcMain.handle("dialog:openDirectory", async () => {
   return await GitService.openDirectory();
 });
-ipcMain.handle("git:getCommits", async (_event, localPath, branch) => {
-  return await GitService.getCommits(localPath, branch);
-});
+ipcMain.handle(
+  "git:getCommits",
+  async (_event, localPath, branch) => {
+    return await GitService.getCommits(localPath, branch);
+  }
+);
 ipcMain.handle("git:getBranches", async (_event, localPath) => {
   return await GitService.getBranches(localPath);
 });

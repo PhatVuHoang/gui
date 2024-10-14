@@ -22,6 +22,7 @@ declare global {
         success: boolean;
         data?: { current: string; local: string[]; remote: string[] };
       }>;
+      checkoutBranch: (localPath: string, branch: string) => Promise<void>;
     };
   }
 }

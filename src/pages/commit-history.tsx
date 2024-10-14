@@ -1,22 +1,11 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
 import Layout from "../components/Layout";
+import { useGlobalContext } from "../context/GlobalContext";
 
 const CommitHistory = () => {
-  const location = useLocation();
-  const localPath = location.state?.localPath;
   const [commits, setCommits] = useState<any[]>([]);
   const [error, setError] = useState<string>("");
-  const [localBranches, setLocalBranches] = useState<string[]>([]);
-  const [remoteBranches, setRemoteBranches] = useState<string[]>([]);
-  const [currentBranch, setCurrentBranch] = useState<string>("");
-
-  // Handle fetching branches
-  // const handleSelectBranch = async (branch: string) => {
-  //   setSelectedBranch(branch);
-  //   const commitHistory = await getCommitHistory(localPath, branch);
-  //   setCommits(commitHistory);
-  // };
+  const { currentBranch, localPath } = useGlobalContext();
 
   const fetchCommitHistory = async (branch: string) => {
     try {
@@ -34,39 +23,16 @@ const CommitHistory = () => {
     }
   };
 
-  const handleSelectBranch = async (branch: string) => {
-    fetchCommitHistory(branch);
-  };
-
   useEffect(() => {
-    const fetchBranches = async () => {
-      try {
-        const response = await window.electronAPI.getBranches(localPath);
-        if (response.success) {
-          setLocalBranches(response.data?.local ?? []);
-          setRemoteBranches(response.data?.remote ?? []);
-          setCurrentBranch(response.data?.current ?? "");
-          fetchCommitHistory(response.data?.current ?? "");
-        } else {
-          setError("Failed to fetch branches.");
-        }
-      } catch (err) {
-        setError("Failed to fetch branches.");
-      }
+    const fetchCommits = async () => {
+      await fetchCommitHistory(currentBranch ?? "");
     };
 
-    fetchBranches();
-  }, [localPath]);
+    fetchCommits();
+  }, [currentBranch]);
 
   return (
-    <Layout
-      branches={{
-        local: localBranches,
-        remote: remoteBranches,
-        current: currentBranch,
-      }}
-      onSelectBranch={handleSelectBranch}
-    >
+    <Layout>
       <div className="flex flex-col items-center justify-center min-h-screen bg-background">
         <h1 className="text-4xl mb-6">Commit History</h1>
         {error && <p className="text-red-500">{error}</p>}
